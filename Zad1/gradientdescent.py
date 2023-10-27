@@ -20,10 +20,9 @@ class Solver(ABC):
 
 
 class GradientDescent(Solver):
-    def __init__(self, step_size, iterations, epsilon):
+    def __init__(self, step_size, iterations):
         self.step_size = step_size
         self.iterations = iterations
-        self.epsilon = epsilon
         self.x_values = []
         self.y_values = []
 
@@ -33,7 +32,6 @@ class GradientDescent(Solver):
         dict["Iterations"] = self.iterations
         dict["X_values"] = self.x_values
         dict["Y_values"] = self.y_values
-        dict["Epsilon"] = self.epsilon
         return dict
 
     def set_learning_rate(self, new_step_size):
@@ -41,9 +39,6 @@ class GradientDescent(Solver):
 
     def set_iterations(self, new_iter_num):
         self.iterations = new_iter_num
-
-    def set_epsilon(self, new_epsilon):
-        self.epsilon = new_epsilon
 
     def solve(self, problem, x0, funct, epsilon):
         n_iter = self.iterations
