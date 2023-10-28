@@ -8,10 +8,10 @@ def experiment(function, gradient, x0, step_size, iterations):
     return sample.solve(gradient, x0, function)
 
 
-def experiment_serie(domain, function, gradient,
+def experiment_serie(start_points, function, gradient,
                      step_sizes, iteration_values):
 
-    start_points = np.random.uniform(domain[0], domain[1], 10)
+    start_points = np.array(start_points, dtype=np.float128)
     gradient_results_x = []
     gradient_results_y = []
 
@@ -27,7 +27,7 @@ def experiment_serie(domain, function, gradient,
     iter_values_formatted = list(map(lambda x: [x] * len(start_points), iteration_values))
     iter_values_formatted = [item for sublist in iter_values_formatted for item in sublist]
 
-    step_sizes_formatted = list(map(lambda x: [x] * len(start_points)* len(iteration_values), step_sizes))
+    step_sizes_formatted = list(map(lambda x: [x] * len(start_points) * len(iteration_values), step_sizes))
     step_sizes_formatted = [item for sublist in step_sizes_formatted for item in sublist]
 
     experiments_table = {"Experiment number": num_of_ex, "Step size": step_sizes_formatted,

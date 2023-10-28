@@ -40,13 +40,13 @@ class GradientDescent(Solver):
     def set_iterations(self, new_iter_num):
         self.iterations = new_iter_num
 
-    def solve(self, problem, x0, funct, epsilon):
+    def solve(self, problem, x0, funct):
         n_iter = self.iterations
 
-        while n_iter > 0 and x0 > epsilon:
+        while n_iter > 0:
             self.x_values.append(x0)
             self.y_values.append(funct(x0))
             n_iter -= 1
             d = problem(x0)
             x0 = np.subtract(x0, d * self.step_size)
-        return x0
+        return x0, funct(x0)
