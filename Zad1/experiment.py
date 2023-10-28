@@ -5,6 +5,30 @@ import numpy as np
 
 def experiment_serie(start_points, function, gradient,
                      step_sizes, iteration_values, correct_value):
+    """
+    Function doing series of experiments for given gradient descent hyperparams
+
+    :param start_points: tuple of start points
+    :type: tuple
+
+    :param function: function of which gradient is calculated
+    :type: funct
+
+    :param gradient: gradient function
+    :type: funct
+
+    :param step_size: tuple of learning rates
+    :type: tuple
+
+    :param iteraton_values: tuple of iterations number
+    :type: tuple
+
+    :param correct_value: analytical minimum
+    :type: np.array
+
+    :return: tuple with results, tuple with best and worst grad steps
+    :rtype: tuple(tuple)
+    """
 
     start_points = np.array(start_points, dtype=np.float128)
     gradient_results_x = []
@@ -43,6 +67,30 @@ def experiment_serie(start_points, function, gradient,
 
 def create_table(step_sizes, iteration_values, start_points,
                  gradient_results_x, gradient_results_y, error_x):
+    """
+    Creates tabulate table for given results
+
+    :param step_size: tuple of learning rates
+    :type: tuple
+
+    :param iteraton_values: tuple of iterations number
+    :type: tuple
+
+    :param start_points: tuple of start points
+    :type: tuple
+
+    :param gradient_results_x: x cordinate after grad descent for each expr
+    :type: list
+
+    :param gradient_results_y: x cordinate after grad descent for each expr
+    :type: list
+
+    :param error_x: linalg norm of a difference between final x and correct val
+    :type: list
+
+    :return: tabulate results table
+    :rtype: tabulate
+    """
 
     num_of_ex = [i for i in range(1, (len(step_sizes) * len(iteration_values) * len(start_points)) + 1)]
 
