@@ -12,6 +12,8 @@ def experiment_serie(start_points, function, gradient,
     error_x = []
     get_first = GradientDescent(step_sizes[0], iteration_values[0])
     max_x, _ = get_first.solve(gradient, start_points[0], function)
+    worst_grad_steps_x = get_first.get_parameters()["X_values"]
+    worst_grad_steps_y = get_first.get_parameters()["Y_values"]
     min_x = start_points[0]
 
     for step_size in step_sizes:
