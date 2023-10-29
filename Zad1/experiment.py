@@ -1,4 +1,3 @@
-from tabulate import tabulate
 from gradientdescent import GradientDescent
 import numpy as np
 
@@ -57,7 +56,6 @@ def experiment_serie(start_points, function, gradient,
                     worst_grad_steps_x = sample.get_parameters()["X_values"]
                     worst_grad_steps_y = sample.get_parameters()["Y_values"]
 
-
     results = (step_sizes, iteration_values, start_points, gradient_results_x, gradient_results_y, error_x)
     best = (best_grad_steps_x, best_grad_steps_y)
     worst = (worst_grad_steps_x, worst_grad_steps_y)
@@ -88,8 +86,8 @@ def create_table(step_sizes, iteration_values, start_points,
     :param error_x: linalg norm of a difference between final x and correct val
     :type: list
 
-    :return: tabulate results table
-    :rtype: tabulate
+    :return: formatted dict of results
+    :rtype: dictionary
     """
 
     num_of_ex = [i for i in range(1, (len(step_sizes) * len(iteration_values) * len(start_points)) + 1)]
@@ -105,4 +103,40 @@ def create_table(step_sizes, iteration_values, start_points,
                          "Starting points": list(start_points) * len(iteration_values) * len(step_sizes),
                          "End x": gradient_results_x, "End y": gradient_results_y, "Error value": error_x}
 
-    return tabulate(experiments_table, headers="keys", tablefmt="fancy_grid")
+    return experiments_table
+
+
+def create_summary(step_sizes, iteration_values, start_points, table):
+    """
+    Creates a dictionary with average error for every hiperparam combination
+
+    :param step_size: all of step_sizes
+    :type: tuple
+
+    :param iteration_values: all iteration values
+    :type: tuple
+
+    :param start_points: all start_points
+    :type: tuple
+
+    :param table: formatted results of all experiments
+    :type: dictionary
+
+    :return: summary of hyperparam performance
+    :rtype: dictionary
+    """
+    all_error_sums = []
+    error_sum = 0.
+    step_sizes_formatted = list(map(lambda x: [x] * len(iteration_values), step_sizes))
+    step_sizes_formatted = [item for sublist in step_sizes_formatted for item in sublist]
+
+    for i in enumerate(table["Step size"], start=1):
+        error_sum += table["Error value"][i[0]-1]
+        if i[0] % len(start_points) == 0:
+            all_error_sums.append(np.divide(error_sum, len(start_points)))
+            error_sum = 0
+
+    sum_dict = {"Step size": step_sizes_formatted,
+                "Iteration number": iteration_values * len(step_sizes),
+                "Error average": all_error_sums}
+    return sum_dict
