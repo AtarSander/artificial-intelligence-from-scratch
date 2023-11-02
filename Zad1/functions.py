@@ -1,17 +1,17 @@
 import numpy as np
 
 
-def f1(x):
+def f1(x, threshold=100):
     """A mathematical function"""
-    if abs(x) > 1000:
+    if np.any(np.abs(x)) > threshold:
         return np.inf
     else:
         return np.array(1/4 * np.power(x, 4))
 
 
-def gradient_f1(x):
+def gradient_f1(x, threshold=100):
     """A mathematical function gradient, returns inf if gradient explodes"""
-    if abs(x) > 1000:
+    if np.any(np.abs(x)) > threshold:
         return np.inf
     else:
         return np.array(np.power(x, 3))

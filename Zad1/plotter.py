@@ -107,7 +107,7 @@ def plotter_2D(func, domain=[(-10, 10), (-10, 10)], grad_x=None, num_points=400,
     X1, X2 = np.meshgrid(x1, x2)
 
     Z = func((X1, X2))
-    plt.contourf(X1, X2, Z, cmap='viridis', label=legend_label)
+    plt.contourf(X1, X2, Z, cmap='viridis')
     plt.colorbar()
     if steps:
         for i in range(1, len(grad_x)):
@@ -120,15 +120,12 @@ def plotter_2D(func, domain=[(-10, 10), (-10, 10)], grad_x=None, num_points=400,
     plt.ylabel(x2_label)
     if title:
         plt.title(title)
-    if legend_label:
-        plt.legend(legend_label)
-
     plt.show()
 
 
 def plotter_3D(func, domain, grad_x=None, grad_y=None, num_points=100, title=None,
                view=(15, -30), x1_label='x1', x2_label='x2', x3_label='f(x1, x2)',
-               legend_label=None, steps=False, every=False):
+               steps=False, every=False):
     """
     Creates a 3D plot for given function with/without grad steps
 
@@ -190,6 +187,4 @@ def plotter_3D(func, domain, grad_x=None, grad_y=None, num_points=100, title=Non
     ax.set_zlabel(x3_label)
     if title:
         plt.title(title)
-    if legend_label:
-        plt.legend(legend_label)
     plt.show()
