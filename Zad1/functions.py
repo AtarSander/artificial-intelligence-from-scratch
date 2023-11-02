@@ -3,12 +3,18 @@ import numpy as np
 
 def f1(x):
     """A mathematical function"""
-    return np.array(1/4 * np.power(x, 4))
+    if abs(x) > 1000:
+        return np.inf
+    else:
+        return np.array(1/4 * np.power(x, 4))
 
 
 def gradient_f1(x):
-    """A mathematical function gradient"""
-    return np.array(np.power(x, 3))
+    """A mathematical function gradient, returns inf if gradient explodes"""
+    if abs(x) > 1000:
+        return np.inf
+    else:
+        return np.array(np.power(x, 3))
 
 
 def f2(x):
