@@ -41,7 +41,7 @@ class Genetic(Solver):
             s = self.selection(p[t], o[t])
             m = self.cross_mutate(s, pc, pm)
             o[t+1] = self.grade(problem, m)
-            x_t, o_t = self.find_best(p[t], o[t])
+            x_t, o_t = self.find_best(m, o[t+1])
             if o_t > o_best:
                 x_best = x_t
                 o_best = o_t
