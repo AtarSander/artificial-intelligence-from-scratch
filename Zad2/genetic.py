@@ -21,33 +21,49 @@ class Solver(ABC):
 
 
 class Genetic(Solver):
+    def __init__(self, pop_n=10, t_max=100, pc=0.95, pm=0.05):
+        self.update_params(pop_n, t_max, pc, pm)
+
+    def update_params(self, pop_n, t_max, pc, pm):
+        self.pop_n = pop_n
+        self.t_max = t_max
+        self.pc = pc
+        self.pm = pm
+
     def get_parameters(self):
         """Returns a dictionary of hyperparameters"""
         dict = {}
-        dict["Iteration_number"] = self.step_size
-        dict["Crossover_rate"] = self.iterations
-        dict["Mutation_rate"] = self.x_values
-        dict["Individuals_number"] = self.y_values
+        dict["Individuals_number"] = self.pop_n
+        dict["Iteration_number"] = self.t_max
+        dict["Crossover_rate"] = self.pc
+        dict["Mutation_rate"] = self.pm
         return dict
 
     def solve(self, problem, pop_n, t_max, pc, pm, dim=200):
+        self.update_params(pop_n, t_max, pc, pm)
         t = 0
-        p = [0]*t_max
-        o = [0]*t_max
+        p = [0] * t_max
+        g = [0] * t_max
+        x = [0] * t_max
+        c = [0] * t_max
         p[0] = self.initialize(pop_n, dim)
-        o[0] = self.grade(problem, p[0])
-        x_best, o_best = self.find_best(p[0], o[0])
+        g[0] = self.grade(problem, p[0])
+        x_best, g_best = self.find_best(p[0], g[0])
+
         while t < t_max-1:
-            s = self.selection(p[t], o[t])
+            s = self.selection(p[t], g[t])
             m = self.cross_mutate(s, pc, pm)
-            o[t+1] = self.grade(problem, m)
-            x_t, o_t = self.find_best(m, o[t+1])
-            if o_t > o_best:
-                x_best = x_t
-                o_best = o_t
+            g[t+1] = self.grade(problem, m)
+            x[t], c[t] = self.find_best(m, g[t+1])
+            if c[t] > g_best:
+                x_best = x[t]
+                g_best = c[t]
             p[t+1] = m
             t += 1
-        return x_best, o_best
+
+        self.grades = c
+        self.solutions = x
+        return x_best, g_best
 
     def initialize(self, pop_n, dim):
         population = []
@@ -56,32 +72,27 @@ class Genetic(Solver):
             population.append(random_array)
         return np.array(population)
 
-    def grade(self, target_funct, pop):
-        g = []
-        for i in pop:
-            g.append(target_funct(i)+3000)
-        return np.array(g)
+    def grade(self, target_funct, pop, C=3000):
+        grades = []
+        for individual in pop:
+            grades.append(target_funct(individual)+C)
+        return np.array(grades)
 
-    def find_best(self, pop, o):
-        o_best = np.max(o)
-        x_best = pop[np.argmax(o)]
-        return x_best, o_best
+    def find_best(self, pop, grades):
+        g_best = np.max(grades)
+        x_best = pop[np.argmax(grades)]
+        return x_best, g_best
 
-    def selection(self, pop, o):
+    def selection(self, pop, g):
         prob = []
-        s = []
-        prob_sum = np.sum(o)
-        for target_val in o:
+        selected = []
+        prob_sum = np.sum(g)
+        for target_val in g:
             prob.append(target_val/prob_sum)
-        # for _ in pop:
-        #     value = np.random.choice(pop, p=prob)
-        #     s.append(value)
         indices = np.random.choice(len(pop), size=len(prob), p=prob)
+        selected = [pop[i] for i in indices]
 
-        # Select arrays based on the chosen indices
-        s = [pop[i] for i in indices]
-
-        return np.array(s)
+        return np.array(selected)
 
     def cross_mutate(self, s, pc, pm):
         m = []
@@ -96,6 +107,7 @@ class Genetic(Solver):
                 split = np.random.randint(len(s[i]))
                 child1 = np.concatenate((parent1[:split], parent2[split:]), axis=0)
                 child2 = np.concatenate((parent2[:split], parent1[split:]), axis=0)
+
             for j in range(len(s[i])):
                 mut_rand = np.random.rand()
                 if pm > mut_rand:
