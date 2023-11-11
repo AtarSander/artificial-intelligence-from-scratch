@@ -65,7 +65,9 @@ def create_table(ind_and_iter, cross_rate, mut_rate, g_mean, g_std):
     experiments_table = {"Experiment number": num_of_ex,
                          "Individuals number": individuals_formatted,
                          "Iterations number": iterations_formatted,
-                         "Cross probability": cross_rate_formatted * len(iterations),
-                         "Mutation probability": mut_rate * len(cross_rate) * len(ind_and_iter),
+                         "Cross probability": cross_rate_formatted *
+                         len(iterations),
+                         "Mutation probability": mut_rate *
+                         len(cross_rate) * len(ind_and_iter),
                          "Mean best result (25 runs)": result}
     return experiments_table
