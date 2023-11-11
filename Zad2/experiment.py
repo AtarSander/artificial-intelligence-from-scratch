@@ -33,9 +33,8 @@ def experiment(ind_num, iter_nums, cross_rate, mut_rate, budget):
             g.append(g_best)
         g_mean.append(np.mean(g))
         g_std.append(round(np.std(g), 2))
-        g_stats.append(np.mean(g_runs))
-        g_stats_std.append(round(np.std(g_runs), 2))
-    print(g_stats, g_stats_std)
+        g_stats.append(np.mean(g_runs, axis=0))
+        g_stats_std.append(np.std(g_runs, axis=0))
 
     return g_mean, g_std, g_stats, g_stats_std
 
