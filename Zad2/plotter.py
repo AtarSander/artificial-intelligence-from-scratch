@@ -31,3 +31,30 @@ def plot_example(g_run, t_steps, legend):
     plt.ylabel("Target function value")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
     plt.show()
+
+
+def plot_bar(experiments_table, g_mean, parameters, shortcuts, budget=4000):
+    values = []
+    values_std = []
+    categories = []
+
+    for parameter in parameters:
+        for value in set(experiments_table[parameter]):
+            results = []
+            for j in enumerate(experiments_table[parameter]):
+                if j[1] == value:
+                    results.append(g_mean[j[0]])
+            values.append(np.mean(results))
+            values_std.append(np.std(results))
+            if parameter == "Individuals number":
+                categories.append(shortcuts[parameter]+"="+str(value) + ", " +
+                                  shortcuts["t_max"] + "="+str(budget//value))
+            else:
+                categories.append(shortcuts[parameter]+"="+str(value))
+    plt.bar(categories, values, yerr=values_std, align="center", ecolor="black")
+    plt.xticks(rotation="vertical")
+    plt.xlabel("Parameters")
+    plt.ylabel("Mean results")
+    plt.title("How each parameter did for given value")
+    plt.tight_layout()
+    plt.show()
