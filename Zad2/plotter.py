@@ -18,6 +18,7 @@ def plot_results(experiments_table, g_mean, g_stats, g_stats_std):
         plt.fill_between(timesteps, g_stats[i] - g_stats_std[i],
                          g_stats[i] + g_stats_std[i], alpha=0.2)
 
+    plt.title("Results of each generation for the best set of parameters")
     plt.xlabel("Iteration")
     plt.ylabel("Target function value")
     plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
