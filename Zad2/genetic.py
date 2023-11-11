@@ -44,18 +44,21 @@ class Genetic(Solver):
     def get_best_grades(self):
         return self.best_grades
 
+    def get_best_solution(self):
+        return self.best_solutions
+
     def solve(self, problem, pop_n, t_max, pc, pm, dim=200):
         self.update_params(pop_n, t_max, pc, pm)
         t = 0
-        p = [0] * t_max
-        g = [0] * t_max
+        p = [0] * (t_max+1)
+        g = [0] * (t_max+1)
         x = [0] * t_max
         c = [0] * t_max
         p[0] = self.initialize(pop_n, dim)
         g[0] = self.grade(problem, p[0])
         x_best, g_best = self.find_best(p[0], g[0])
 
-        while t < t_max-1:
+        while t < t_max:
             s = self.selection(p[t], g[t])
             m = self.cross_mutate(s, pc, pm)
             g[t+1] = self.grade(problem, m)
@@ -113,8 +116,10 @@ class Genetic(Solver):
                 parent1 = s[i]
                 parent2 = s[i+1]
                 split = np.random.randint(len(s[i]))
-                child1 = np.concatenate((parent1[:split], parent2[split:]), axis=0)
-                child2 = np.concatenate((parent2[:split], parent1[split:]), axis=0)
+                child1 = np.concatenate((parent1[:split], parent2[split:]),
+                                        axis=0)
+                child2 = np.concatenate((parent2[:split], parent1[split:]),
+                                        axis=0)
 
             for j in range(len(s[i])):
                 mut_rand = np.random.rand()
