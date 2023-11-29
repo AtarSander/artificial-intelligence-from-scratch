@@ -32,7 +32,7 @@ class Alphabeta(Solver):
         """Returns a dictionary of hyperparameters"""
         return self.depth
 
-    def solve(self, game: Game, depth: int, alpha: int, beta: int, maximizing_player: Player) -> tuple(int, Move):
+    def solve(self, game: Game, depth: int, alpha: int, beta: int, maximizing_player: Player) -> tuple[int, Move]:
         if game.is_finished():
             if game.get_winner() is None:
                 return None, 0
