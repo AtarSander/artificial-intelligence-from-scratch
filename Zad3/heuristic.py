@@ -1,9 +1,10 @@
-from typing import Tuple
+from typing import Tuple, List
+from two_player_games.player import Player
 
 
-def heuristic(fields, maximizing_player) -> int:
+def heuristic(fields: List[List[Player]], maximizing_player: Player) -> int:
     score = 0
-    exp_heur = {0: 0, 1: 1, 2: 5, 3: 20}
+    exp_heur = {0: 0, 1: 1, 2: 32, 3: 243}
 
     for column_id in range(len(fields)):  # verticals
         for start_row_id in range(len(fields[column_id]) - 3):
