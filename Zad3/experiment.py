@@ -1,11 +1,10 @@
 from alphabeta import Alphabeta
-import sys
+from enum import IntEnum
+from two_player_games.games.connect_four import ConnectFour, Game, Player
+from typing import List
 import random
 import numpy as np
 import copy
-from enum import IntEnum
-sys.path.append("Zad3/two-player-games")
-from two_player_games.games.connect_four import ConnectFour
 
 
 class Option(IntEnum):
@@ -17,7 +16,7 @@ class Option(IntEnum):
     HUMAN_VS_ALGO = 6
 
 
-def experiment(option, games_num, depths=None):
+def experiment(option: Option, games_num: int, depths: List = None) -> dict:
     results = {}
     if option == 1:
         player_1_wins = 0
@@ -112,7 +111,7 @@ def experiment(option, games_num, depths=None):
     return results
 
 
-def ab_game(game, ab_player, who, depth, depth2=None):
+def ab_game(game: Game, ab_player: Player, who: Option, depth: int, depth2: int = None) -> Player:
     # Algo vs rand
     if who == 2:
         max_player = game.get_current_player()
@@ -198,7 +197,7 @@ def ab_game(game, ab_player, who, depth, depth2=None):
     return winner
 
 
-def play_game(option, depth):
+def play_game(option: Option, depth: int) -> str:
     game = ConnectFour()
     ab_player = Alphabeta(depth)
     if option == 5 or option == 6:
