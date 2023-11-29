@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
+from heuristic import heuristic
 import numpy as np
+import random
+import copy
 
 
 class Solver(ABC):
@@ -28,41 +31,49 @@ class Alphabeta(Solver):
         """Returns a dictionary of hyperparameters"""
         return self.depth
 
-    def solve(self, game, depth, alpha, beta, maximizingPlayer):
-        if depth == 0:
-            return None, 0
+    def solve(self, game, depth, alpha, beta, maximizing_player):
         if game.is_finished():
-            if game.get_winner() == maximizingPlayer:
-                return None, 1
-            elif game.get_winner() is None:
+            if game.get_winner() is None:
                 return None, 0
+            if game.get_winner().char == maximizing_player.char:
+                return None, np.inf
             else:
-                return None, -1
+                return None, -np.inf
+        if depth == 0:
+            return None, heuristic(game.state.fields, maximizing_player)
 
-        if maximizingPlayer == game.get_current_player():
+        if maximizing_player.char == game.get_current_player().char:
             max_value = -np.inf
-            max_move = None
+            same_quality = []
             for move in game.get_moves():
+                copy_game = copy.deepcopy(game)
                 game.make_move(move)
-                value = self.solve(game, depth-1, alpha, beta, game.get_current_player())[1]
+                value = self.solve(game, depth-1, alpha, beta, maximizing_player)[1]
+                game = copy_game
                 if value > max_value:
                     max_value = value
-                    max_move = move
+                    same_quality = [(move, value)]
+                elif value == max_value:
+                    same_quality.append((move, value))
                 alpha = max(alpha, max_value)
                 if max_value >= beta:
                     break
-            return max_move, max_value
+            return random.choice(same_quality)
 
         else:
             min_value = np.inf
-            min_move = None
+            same_quality = []
             for move in game.get_moves():
+                copy_game = copy.deepcopy(game)
                 game.make_move(move)
-                value = self.solve(game, depth-1, alpha, beta, game.get_current_player())[1]
+                value = self.solve(game, depth-1, alpha, beta, maximizing_player)[1]
+                game = copy_game
                 if value < min_value:
                     min_value = value
-                    min_move = move
+                    same_quality = [(move, value)]
+                elif value == min_value:
+                    same_quality.append((move, value))
                 beta = min(beta, min_value)
                 if min_value <= alpha:
                     break
-            return min_move, min_value
+            return random.choice(same_quality)
