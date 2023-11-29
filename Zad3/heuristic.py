@@ -3,7 +3,8 @@ from typing import Tuple
 
 def heuristic(fields, maximizing_player) -> int:
     score = 0
-    exp_heur = {0:0, 1: 1, 2: 5, 3: 20, 4: 1000}
+    exp_heur = {0: 0, 1: 1, 2: 5, 3: 20}
+
     for column_id in range(len(fields)):  # verticals
         for start_row_id in range(len(fields[column_id]) - 3):
             points_dict = count_lines(fields, (column_id, start_row_id), (0, 1))
@@ -14,6 +15,7 @@ def heuristic(fields, maximizing_player) -> int:
                 else:
                     series = list(points_dict.values())
                     score -= exp_heur[series[0]]
+
     for start_column_id in range(len(fields) - 3):  # horizontals
         for row_id in range(len(fields[start_column_id])):
             points_dict = count_lines(fields, (start_column_id, row_id), (1, 0))
@@ -24,6 +26,7 @@ def heuristic(fields, maximizing_player) -> int:
                 else:
                     series = list(points_dict.values())
                     score -= exp_heur[series[0]]
+
     for start_column_id in range(len(fields) - 3):  # diagonals
         for start_row_id in range(len(fields[start_column_id]) - 3):
             points_dict = count_lines(fields, (start_column_id, start_row_id), (1, 1))
