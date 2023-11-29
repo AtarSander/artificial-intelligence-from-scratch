@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from heuristic import heuristic
+from two_player_games.game import Game, Player, Move
 import numpy as np
 import random
 import copy
@@ -24,14 +25,14 @@ class Solver(ABC):
 
 
 class Alphabeta(Solver):
-    def __init__(self, depth):
+    def __init__(self, depth: int):
         self.depth = depth
 
-    def get_parameters(self):
+    def get_parameters(self) -> int:
         """Returns a dictionary of hyperparameters"""
         return self.depth
 
-    def solve(self, game, depth, alpha, beta, maximizing_player):
+    def solve(self, game: Game, depth: int, alpha: int, beta: int, maximizing_player: Player) -> tuple(int, Move):
         if game.is_finished():
             if game.get_winner() is None:
                 return None, 0
@@ -47,9 +48,8 @@ class Alphabeta(Solver):
             same_quality = []
             for move in game.get_moves():
                 copy_game = copy.deepcopy(game)
-                game.make_move(move)
-                value = self.solve(game, depth-1, alpha, beta, maximizing_player)[1]
-                game = copy_game
+                copy_game.make_move(move)
+                value = self.solve(copy_game, depth-1, alpha, beta, maximizing_player)[1]
                 if value > max_value:
                     max_value = value
                     same_quality = [(move, value)]
@@ -65,9 +65,8 @@ class Alphabeta(Solver):
             same_quality = []
             for move in game.get_moves():
                 copy_game = copy.deepcopy(game)
-                game.make_move(move)
-                value = self.solve(game, depth-1, alpha, beta, maximizing_player)[1]
-                game = copy_game
+                copy_game.make_move(move)
+                value = self.solve(copy_game, depth-1, alpha, beta, maximizing_player)[1]
                 if value < min_value:
                     min_value = value
                     same_quality = [(move, value)]
