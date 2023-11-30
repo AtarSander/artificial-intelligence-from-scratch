@@ -1,0 +1,3 @@
+[submodule "two-player-games"]
+	path = Zad3/two-player-games
+	url = https://github.com/lychanl/two-player-games.git
