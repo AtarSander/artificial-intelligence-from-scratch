@@ -32,6 +32,7 @@ class Tree(Solver):
         self.min_split = min_split
         self.max_depth = max_depth
         self.target = target
+        self.root = None
 
     def get_parameters(self):
         dict = {}
@@ -47,9 +48,9 @@ class Tree(Solver):
             leaf_value = self.classify(dataset)
             return TreeNode(value=leaf_value)
 
-        d = self.inf_gain(self, dataset)
-        for j in range(len(dataset.columns) - 1):
-            return self.build_tree(self, dataset.drop(columns=d), current_depth=-1)
+        d = self.max_inf_gain(self, dataset)
+        for j in range(len(dataset[d].unique()) - 1):
+            return self.build_tree(self, dataset.drop(columns=d), current_depth=current_depth-1)
 
     def check_leaf(self, dataset):
         X = dataset.drop(columns=self.target)
@@ -63,10 +64,11 @@ class Tree(Solver):
         index = count_classes.argmax()
         return classes[index]
 
-    def inf_gain(self, dataset):
+    def max_inf_gain(self, dataset):
         Y = dataset[:, self.target]
         X = dataset.drop(columns=self.target)
         max_feature = None
+        max_entropy = -2
         for feature in X.columns:
             all_count = len(dataset[feature])
             all_values = Y.value_counts()
@@ -77,13 +79,22 @@ class Tree(Solver):
             )
             all_entropy = self.entropy(all_count, all_values)
             part_entropies = []
-            for x_value, counts in values_count.iterrows():
-                part_entropies.append(self.entropy(sum(counts), counts))
+            for _, counts in values_count.iterrows():
+                part_entropies.append(sum(counts)/all_count * self.entropy(counts))
+            entropy = all_entropy - sum(part_entropies)
+            if entropy > max_entropy:
+                max_entropy = entropy
+                max_feature = feature
 
         return max_feature
 
-    def entropy(self, all, positive):
-        pass
+    def entropy(self, values):
+        entropy = 0
+        all = sum(values)
+        for _, count in values:
+            entropy -= count/all * np.log2(count/all)
+        return entropy
+
 
     def predict(self, X):
         pass
