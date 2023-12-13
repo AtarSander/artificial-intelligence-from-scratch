@@ -35,7 +35,7 @@ def split_dataset(df, target):
     X = df.drop(target, axis=1)
     y = df[target]
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, stratify=y, random_state=42
+        X, y, test_size=0.2, stratify=y, random_state=42
     )
     X_dev, X_test, y_dev, y_test = train_test_split(
         X_test, y_test, test_size=0.5, stratify=y_test, random_state=42
