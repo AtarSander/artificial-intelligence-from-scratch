@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import pandas as pd
 from TreeNode import TreeNode
 
 
@@ -28,41 +29,45 @@ class Solver(ABC):
 
 
 class Tree(Solver):
-    def __init__(self, min_split, max_depth, target):
-        self.min_split = min_split
+    def __init__(self, max_depth, target):
         self.max_depth = max_depth
         self.target = target
         self.root = None
 
     def get_parameters(self):
         dict = {}
-        dict["Minimal_split"] = self.min_split
         dict["Maximum_depth"] = self.max_depth
         return dict
 
     def fit(self, X, y):
-        dataset = np.concatenate((X, y), axis=1)
+        dataset = pd.concat([X, y], axis=1)
         self.root = self.build_tree(dataset, 0)
 
     def build_tree(self, dataset, current_depth):
-        if self.check_leaf(dataset) or current_depth < self.max_depth:
+        if (
+            self.check_leaf(dataset)
+            or current_depth >= self.max_depth
+            or dataset.shape[1] == 1
+        ):
             leaf_value = self.classify(dataset)
             return TreeNode(value=leaf_value)
 
-        d = self.max_inf_gain(self, dataset)
-        for j in range(len(dataset[d].unique()) - 1):
-            return self.build_tree(
-                self, dataset.drop(columns=d), current_depth=current_depth + 1
-            )
+        d = self.max_inf_gain(dataset)
+        labels = {}
+        for value in dataset[d].unique():
+            subdataset = dataset[dataset[d] == value]
+            branch = self.build_tree(subdataset.drop(columns=d), current_depth + 1)
+            labels[value] = branch
+
+        return TreeNode(feature=d, labels=labels)
 
     def check_leaf(self, dataset):
-        X = dataset.drop(columns=self.target)
-        if len(np.unique(X)) == 1:
+        if len(np.unique(dataset[self.target])) <= 1:
             return True
         return False
 
     def classify(self, dataset):
-        Y = dataset[:, self.target]
+        Y = dataset[self.target]
         classes, count_classes = np.unique(Y, return_counts=True)
         index = count_classes.argmax()
         return classes[index]
@@ -82,7 +87,6 @@ class Tree(Solver):
             )
             all_entropy = self.entropy(all_values)
             part_entropies = []
-            print(values_count)
             for _, counts in values_count.iterrows():
                 div_val = sum(counts) / all_count
                 part_entropies.append(div_val * self.entropy(counts))
@@ -102,4 +106,20 @@ class Tree(Solver):
         return entropy
 
     def predict(self, X):
-        pass
+        predictions = []
+        for _, row in X.iterrows():
+            x = pd.DataFrame(row).transpose()
+            predictions.append(self.make_prediction(x, self.root))
+        return predictions
+
+    def make_prediction(self, x, tree):
+        if tree.value is not None:
+            return tree.value
+
+        row_values = x.values[0]
+        key = row_values[x.columns.get_loc(tree.feature)]
+        if key in tree.labels.keys():
+            return self.make_prediction(x, tree.labels[key])
+
+        closest_key = min(tree.labels, key=lambda a: abs(a - key))
+        return self.make_prediction(x, tree.labels[closest_key])
