@@ -1,5 +1,5 @@
 class TreeNode:
-    def __init__(self, feature, info_gain=None, value=None):
+    def __init__(self, feature=None, labels=None, value=None):
         self.feature = feature
-        self.info_gain = info_gain
+        self.labels = labels
         self.value = value
