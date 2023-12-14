@@ -26,4 +26,19 @@ def test_results(X_train, Y_train, X_test, Y_test, best_parameter, target):
     model = Tree(best_parameter, target)
     model.fit(X_train, Y_train)
     Y_test_pred = model.predict(X_test)
-    return accuracy_score(Y_test, Y_test_pred)
+    depth = [best_parameter]
+    accuracy = [accuracy_score(Y_test, Y_test_pred)]
+    test_result = {}
+    test_result["Depth"] = depth
+    test_result["Accuracy"] = accuracy
+    return test_result
+
+
+def plot(results, option1, option2, title):
+    plt.plot(results["Maximum depth"], results[option1], label=option1)
+    plt.plot(results["Maximum depth"], results[option2], label=option2)
+    plt.title(title)
+    plt.xlabel("Maximum depth")
+    plt.ylabel("Accuracy")
+    plt.legend(loc="upper left", fontsize="small")
+    plt.show
