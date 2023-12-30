@@ -6,10 +6,10 @@ def initialize_parameters(layer_dims):
     np.random.seed(2)
     parameters = {}
     L = len(layer_dims)
-
     for l in range(1, L):
         parameters['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l-1]) * 0.01
         parameters['b' + str(l)] = np.zeros((layer_dims[l], 1))
+    return parameters
 
 
 def relu(Z):
@@ -65,12 +65,62 @@ def cost_function(AL, Y):
     return np.squeeze(cost)
 
 
+def relu_backward(dA, activ_cache):
+    Z = activ_cache
+    dZ = np.array(dA, copy=True)
+    dZ[Z <= 0] = 0
+    return dZ
+
+def softmax_backward(dA, activ_cache):
+    Z = activ_cache
+    dZ = np.matmul(Z, (1 - Z))
+    return dZ
 
 
-    
+def linear_backward(dZ, cache):
+    A_prev, W, b = cache
+    m = A_prev.shape[1]
+    dW = (1 / m) * np.matmul(dZ, A_prev.T)
+    db = (1 / m) * np.sum(dZ, axis=1, keepdims=True)
+    dA_prev = np.matmul(W.T, dZ)
+    return dA_prev, dW, db
 
-        
 
-# def model(X, Y, layer_dims, learning_rate, num_iterations, print_cost):
-#     pass
+def linear_activation_backward(dA, cache, activation_function):
+    linear_cache, activ_cache = cache
+    if activation_function == "relu":
+        dZ = relu_backward(dA, activ_cache)
+    elif activation_function == "softmax":
+        dZ = softmax_backward(dA, activ_cache)
 
+    dA, dW, db = linear_backward(dZ, linear_cache)
+    return dA, dW, db
+
+
+def backward_propagation(AL, Y, caches):
+    gradients = {}
+    L = len(caches)
+    Y = Y.reshape(AL.shape)
+    dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
+    current_cache = caches[L-1]
+    dA_prev, dW, db = linear_activation_backward(dAL, current_cache, "softmax")
+    gradients['dA' + str(L-1)] = dA_prev
+    gradients['dW' + str(L)] = dW
+    gradients['db' + str(L)] = db
+
+    for l in reversed(range(L-1)):
+        current_cache = caches[l]
+        dA_prev, dW, db = linear_activation_backward(gradients['dA'+str(l+1)], current_cache, "relu")
+        gradients['dA' + str(l)] = dA_prev
+        gradients['dW' + str(l+1)] = dW
+        gradients['db' + str(l+1)] = db
+    return gradients
+
+
+def update_parameters(parameters, gradients, learning_rate):
+    L = len(parameters) // 2
+    parameters = parameters.copy()
+    for l in range(L):
+        parameters['W'+str(l+1)] = parameters['W'+str(l+1)] - learning_rate * gradients['dW'+str(l+1)]
+        parameters['b'+str(l+1)] = parameters['b'+str(l+1)] - learning_rate * gradients['db'+str(l+1)]
+    return parameters
