@@ -1,17 +1,32 @@
-from sklearn.datasets import load_digits
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
+import numpy as np
+import gzip
+import math
+from keras.datasets import mnist
+
+
+def convert(filename):
+    with open(filename, "rb") as f:
+        data = f.read()
+    return np.frombuffer(gzip.decompress(data), dtype=np.uint8).copy()
 
 
 def load_dataset():
-    digits = load_digits()
-    images = digits.images
-    labels = digits.target
-    flattened_images = images.reshape((images.shape[0], -1))
-    normalized_images = flattened_images / 16.0
-    X_train, X_test, y_train, y_test = train_test_split(normalized_images, labels, test_size=0.2, random_state=42)
-    encoder = OneHotEncoder(sparse=False, categories='auto')
-    y_train_one_hot = encoder.fit_transform(y_train.reshape(-1, 1))
-    y_test_one_hot = encoder.transform(y_test.reshape(-1, 1))
-    return X_train, X_test, y_train_one_hot, y_test_one_hot
+    (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
+    X_train = X_train.reshape((-1, 28 * 28)) / 255.0 * 0.99 + 0.01
+    X_test = X_test.reshape((-1, 28 * 28)) / 255.0 * 0.99 + 0.01
+    rand = np.arange(60000)
+    np.random.shuffle(rand)
+    train_no = rand[:50000]
+    val_no = np.setdiff1d(rand, train_no)
+    X_train, X_dev = X_train[train_no, :], X_train[val_no, :]
+    Y_train, Y_dev = Y_train[train_no], Y_train[val_no]
 
+    Y_train_onehot = np.zeros((Y_train.size, Y_train.max() + 1))
+    Y_train_onehot[np.arange(Y_train.size), Y_train] = 1
+
+    Y_dev_onehot = np.zeros((Y_dev.size, Y_dev.max() + 1))
+    Y_dev_onehot[np.arange(Y_dev.size), Y_dev] = 1
+
+    Y_test_onehot = np.zeros((Y_test.size, Y_test.max() + 1))
+    Y_test_onehot[np.arange(Y_test.size), Y_test] = 1
+    return X_train, Y_train_onehot, X_dev, Y_dev_onehot, X_test, Y_test_onehot
