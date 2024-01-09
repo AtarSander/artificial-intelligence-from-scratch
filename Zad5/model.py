@@ -1,5 +1,6 @@
 import numpy as np
-import pandas as pd
+import math
+
 
 class Model:
     def __init__(self, layer_dims):
@@ -9,9 +10,11 @@ class Model:
         np.random.seed(2)
         parameters = {}
         L = len(layer_dims)
-        for l in range(1, L):
-            parameters['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l-1]) * 0.01
-            parameters['b' + str(l)] = np.zeros((layer_dims[l], 1))
+        for layer_ind in range(1, L):
+            parameters["W" + str(layer_ind)] = np.random.randn(
+                layer_dims[layer_ind], layer_dims[layer_ind - 1]
+            ) * np.sqrt(2 / layer_dims[layer_ind - 1])
+            parameters["b" + str(layer_ind)] = np.zeros((layer_dims[layer_ind], 1))
         return parameters
 
     def relu(self, Z):
@@ -19,19 +22,16 @@ class Model:
         A = np.maximum(0, Z)
         return A, cache
 
-
     def softmax(self, Z):
         cache = Z
         e_x = np.exp(Z - np.max(Z))
-        A = e_x / e_x.sum(axis=0)
+        A = e_x / e_x.sum(axis=0, keepdims=True)
         return A, cache
 
-
     def linear_forward(self, A, W, b):
-        Z = np.matmul(W, A) + b
+        Z = np.dot(W, A) + b
         cache = (A, W, b)
         return Z, cache
-
 
     def linear_activation_forward(self, prev_A, W, b, activation_function):
         Z, linear_cache = self.linear_forward(prev_A, W, b)
@@ -40,32 +40,35 @@ class Model:
 
         elif activation_function == "softmax":
             A, activation_cache = self.softmax(Z)
-
         cache = (linear_cache, activation_cache)
         return A, cache
 
-
     def forward_propagation(self, X, parameters):
         caches = []
-        L = len(parameters) //2
+        L = len(parameters) // 2
         A = X
-
-        for l in range(1, L):
+        for layer_ind in range(1, L):
             A_prev = A
-            A, cache = self.linear_activation_forward(A_prev, parameters['W' + str(l)], parameters['b' + str(l)], "relu")
+            A, cache = self.linear_activation_forward(
+                A_prev,
+                parameters["W" + str(layer_ind)],
+                parameters["b" + str(layer_ind)],
+                "relu",
+            )
             caches.append(cache)
-        
-        AL, cache = self.linear_activation_forward(A, parameters['W' + str(L)], parameters['b' + str(L)], "soft")
+
+        AL, cache = self.linear_activation_forward(
+            A, parameters["W" + str(L)], parameters["b" + str(L)], "softmax"
+        )
         caches.append(cache)
-
         return AL, caches
-
 
     def cost_function(self, AL, Y):
         m = Y.shape[1]
-        cost = (1./m) * (-np.dot(Y, np.log(AL).T) - np.dot(1-Y, np.log(1-AL).T))
-        return np.squeeze(cost)
-
+        epsilon = 1e-8
+        cost = -1 / m * np.sum(np.multiply(Y, np.log(AL + epsilon)))
+        cost = np.squeeze(cost)
+        return cost
 
     def relu_backward(self, dA, activ_cache):
         Z = activ_cache
@@ -75,18 +78,18 @@ class Model:
 
     def softmax_backward(self, dA, activ_cache):
         Z = activ_cache
-        dZ = np.matmul(Z, (1 - Z))
+        e_x = np.exp(Z - np.max(Z))
+        A = e_x / e_x.sum(axis=0)
+        dZ = dA * A * (1 - A)
         return dZ
-
 
     def linear_backward(self, dZ, cache):
         A_prev, W, b = cache
         m = A_prev.shape[1]
-        dW = (1 / m) * np.matmul(dZ, A_prev.T)
+        dW = (1 / m) * np.dot(dZ, A_prev.T)
         db = (1 / m) * np.sum(dZ, axis=1, keepdims=True)
-        dA_prev = np.matmul(W.T, dZ)
+        dA_prev = np.dot(W.T, dZ)
         return dA_prev, dW, db
-
 
     def linear_activation_backward(self, dA, cache, activation_function):
         linear_cache, activ_cache = cache
@@ -98,57 +101,88 @@ class Model:
         dA, dW, db = self.linear_backward(dZ, linear_cache)
         return dA, dW, db
 
-
     def backward_propagation(self, AL, Y, caches):
         gradients = {}
         L = len(caches)
-        Y = Y.reshape(AL.shape)
-        dAL = - (np.divide(Y, AL) - np.divide(1 - Y, 1 - AL))
-        current_cache = caches[L-1]
+        dAL = AL - Y
+        current_cache = caches[L - 1]
         dA_prev, dW, db = self.linear_activation_backward(dAL, current_cache, "softmax")
-        gradients['dA' + str(L-1)] = dA_prev
-        gradients['dW' + str(L)] = dW
-        gradients['db' + str(L)] = db
+        gradients["dA" + str(L - 1)] = dA_prev
+        gradients["dW" + str(L)] = dW
+        gradients["db" + str(L)] = db
 
-        for l in reversed(range(L-1)):
-            current_cache = caches[l]
-            dA_prev, dW, db = self.linear_activation_backward(gradients['dA'+str(l+1)], current_cache, "relu")
-            gradients['dA' + str(l)] = dA_prev
-            gradients['dW' + str(l+1)] = dW
-            gradients['db' + str(l+1)] = db
+        for layer_ind in reversed(range(L - 1)):
+            current_cache = caches[layer_ind]
+            dA_prev, dW, db = self.linear_activation_backward(
+                gradients["dA" + str(layer_ind + 1)], current_cache, "relu"
+            )
+            gradients["dA" + str(layer_ind)] = dA_prev
+            gradients["dW" + str(layer_ind + 1)] = dW
+            gradients["db" + str(layer_ind + 1)] = db
         return gradients
-
 
     def update_parameters(self, parameters, gradients, learning_rate):
         L = len(parameters) // 2
         parameters = parameters.copy()
-        for l in range(L):
-            parameters['W'+str(l+1)] = parameters['W'+str(l+1)] - learning_rate * gradients['dW'+str(l+1)]
-            parameters['b'+str(l+1)] = parameters['b'+str(l+1)] - learning_rate * gradients['db'+str(l+1)]
+        for layer_ind in range(L):
+            parameters["W" + str(layer_ind + 1)] = (
+                parameters["W" + str(layer_ind + 1)]
+                - learning_rate * gradients["dW" + str(layer_ind + 1)]
+            )
+            parameters["b" + str(layer_ind + 1)] = (
+                parameters["b" + str(layer_ind + 1)]
+                - learning_rate * gradients["db" + str(layer_ind + 1)]
+            )
         return parameters
 
+    def create_batches(self, X, Y, batch_size, seed=42):
+        np.random.seed(seed)
+        m = X.shape[1]
+        batches = []
+        permutation = list(np.random.permutation(m))
+        shuffled_X = X[:, permutation]
+        shuffled_Y = Y[:, permutation].reshape((10, m))
+        complete_batches_num = math.floor(m / batch_size)
+        for i in range(complete_batches_num):
+            batch_X = shuffled_X[:, i * batch_size : (i + 1) * batch_size]
+            batch_Y = shuffled_Y[:, i * batch_size : (i + 1) * batch_size]
+            batches.append((batch_X, batch_Y))
 
-    def model(self, X, Y, layer_dims, learning_rate, num_iterations, print_cost):
+        if m % batch_size != 0:
+            batch_X = shuffled_X[:, int(m / batch_size) * batch_size :]
+            batch_Y = shuffled_Y[:, int(m / batch_size) * batch_size :]
+            batches.append((batch_X, batch_Y))
+
+        return batches
+
+    def train(
+        self, X, Y, layer_dims, learning_rate, epochs, batch_size, seed, print_cost
+    ):
         parameters = self.initialize_parameters(layer_dims)
-        A_prev = X
         costs = []
-        for i in range(num_iterations):
-            AL, caches = self.forward_propagation(A_prev, parameters)
-            cost = self.cost_function(AL, Y)
-            costs.append(cost)
-            gradients = self.backward_propagation(AL, Y, caches)
-            parameters = self.update_parameters(parameters, gradients, learning_rate)
-        if print_cost and i % 100 == 0:
-            print("Cost after iteration {i}: {cost}\n")
+        for i in range(epochs):
+            cost_total = 0
+            seed = seed + 1
+            batches = self.create_batches(X, Y, batch_size, seed)
+            for batch in batches:
+                (batch_X, batch_Y) = batch
+                AL, caches = self.forward_propagation(batch_X, parameters)
+                cost = self.cost_function(AL, batch_Y)
+                cost_total += cost
+                gradients = self.backward_propagation(AL, batch_Y, caches)
+                parameters = self.update_parameters(
+                    parameters, gradients, learning_rate
+                )
+            cost_avg = cost_total / len(batches)
+            if print_cost and i % 100 == 0:
+                print(f"Cost after iteration {i}: {cost_avg}\n")
+                costs.append(cost_avg)
+
         return parameters, costs
 
-
-    def predict(self, X, Y, parameters, values):
+    def predict(self, X, Y, parameters):
         AL, _ = self.forward_propagation(X, parameters)
-        n = AL.shape[1]
-        predictions = np.zeros((1, n))
-        for i in range(n):
-            index = np.argmax(AL[0, i])
-            predictions [0, i] = values[index] 
-            accuracy = np.sum(predictions == Y)//n
+        predictions = np.argmax(AL, axis=0)
+        Y = np.argmax(Y, axis=0)
+        accuracy = np.mean(predictions == Y)
         return accuracy
