@@ -4,17 +4,21 @@ import math
 
 class Model:
     def __init__(self, layer_dims):
-        pass
+        self.layer_dims = layer_dims
+        self.parameters = self.initialize_parameters()
 
-    def initialize_parameters(self, layer_dims):
+    def get_parameters(self):
+        return self.parameters
+
+    def initialize_parameters(self):
         np.random.seed(2)
         parameters = {}
-        L = len(layer_dims)
+        L = len(self.layer_dims)
         for layer_ind in range(1, L):
             parameters["W" + str(layer_ind)] = np.random.randn(
-                layer_dims[layer_ind], layer_dims[layer_ind - 1]
-            ) * np.sqrt(2 / layer_dims[layer_ind - 1])
-            parameters["b" + str(layer_ind)] = np.zeros((layer_dims[layer_ind], 1))
+                self.layer_dims[layer_ind], self.layer_dims[layer_ind - 1]
+            ) * np.sqrt(2 / self.layer_dims[layer_ind - 1])
+            parameters["b" + str(layer_ind)] = np.zeros((self.layer_dims[layer_ind], 1))
         return parameters
 
     def relu(self, Z):
@@ -43,22 +47,22 @@ class Model:
         cache = (linear_cache, activation_cache)
         return A, cache
 
-    def forward_propagation(self, X, parameters):
+    def forward_propagation(self, X):
         caches = []
-        L = len(parameters) // 2
+        L = len(self.parameters) // 2
         A = X
         for layer_ind in range(1, L):
             A_prev = A
             A, cache = self.linear_activation_forward(
                 A_prev,
-                parameters["W" + str(layer_ind)],
-                parameters["b" + str(layer_ind)],
+                self.parameters["W" + str(layer_ind)],
+                self.parameters["b" + str(layer_ind)],
                 "relu",
             )
             caches.append(cache)
 
         AL, cache = self.linear_activation_forward(
-            A, parameters["W" + str(L)], parameters["b" + str(L)], "softmax"
+            A, self.parameters["W" + str(L)], self.parameters["b" + str(L)], "softmax"
         )
         caches.append(cache)
         return AL, caches
@@ -121,9 +125,9 @@ class Model:
             gradients["db" + str(layer_ind + 1)] = db
         return gradients
 
-    def update_parameters(self, parameters, gradients, learning_rate):
-        L = len(parameters) // 2
-        parameters = parameters.copy()
+    def update_parameters(self, gradients, learning_rate):
+        L = len(self.parameters) // 2
+        parameters = self.parameters.copy()
         for layer_ind in range(L):
             parameters["W" + str(layer_ind + 1)] = (
                 parameters["W" + str(layer_ind + 1)]
@@ -155,10 +159,7 @@ class Model:
 
         return batches
 
-    def train(
-        self, X, Y, layer_dims, learning_rate, epochs, batch_size, seed, print_cost
-    ):
-        parameters = self.initialize_parameters(layer_dims)
+    def train(self, X, Y, learning_rate, epochs, batch_size, seed, print_cost):
         costs = []
         for i in range(epochs):
             cost_total = 0
@@ -166,22 +167,20 @@ class Model:
             batches = self.create_batches(X, Y, batch_size, seed)
             for batch in batches:
                 (batch_X, batch_Y) = batch
-                AL, caches = self.forward_propagation(batch_X, parameters)
+                AL, caches = self.forward_propagation(batch_X)
                 cost = self.cost_function(AL, batch_Y)
                 cost_total += cost
                 gradients = self.backward_propagation(AL, batch_Y, caches)
-                parameters = self.update_parameters(
-                    parameters, gradients, learning_rate
-                )
+                self.parameters = self.update_parameters(gradients, learning_rate)
             cost_avg = cost_total / len(batches)
             if print_cost and i % 100 == 0:
                 print(f"Cost after iteration {i}: {cost_avg}\n")
                 costs.append(cost_avg)
 
-        return parameters, costs
+        return costs
 
-    def predict(self, X, Y, parameters):
-        AL, _ = self.forward_propagation(X, parameters)
+    def predict(self, X, Y):
+        AL, _ = self.forward_propagation(X)
         predictions = np.argmax(AL, axis=0)
         Y = np.argmax(Y, axis=0)
         accuracy = np.mean(predictions == Y)
