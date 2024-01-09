@@ -29,4 +29,11 @@ def load_dataset():
 
     Y_test_onehot = np.zeros((Y_test.size, Y_test.max() + 1))
     Y_test_onehot[np.arange(Y_test.size), Y_test] = 1
-    return X_train, Y_train_onehot, X_dev, Y_dev_onehot, X_test, Y_test_onehot
+    return (
+        X_train.T,
+        Y_train_onehot.T,
+        X_dev.T,
+        Y_dev_onehot.T,
+        X_test.T,
+        Y_test_onehot.T,
+    )
