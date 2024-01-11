@@ -175,6 +175,7 @@ class Model:
             cost_avg = cost_total / len(batches)
             if print_cost and i % 100 == 0:
                 print(f"Cost after iteration {i}: {cost_avg}\n")
+            if i % 100 == 0:
                 costs.append(cost_avg)
 
         return costs
