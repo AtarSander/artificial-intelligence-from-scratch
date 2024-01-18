@@ -16,7 +16,7 @@ def experiment(env, learning_rates, gammas, epsilons, t_maxes, number_episodes):
     steps = []
     max_reward = 0
     best_model_dict = {}
-    best_q_table = []
+    best_q_table, accuracies = [], []
     for i in range(len(learning_rates)):
         accuracy = qmodel.train(
             learning_rates[i],
@@ -25,17 +25,18 @@ def experiment(env, learning_rates, gammas, epsilons, t_maxes, number_episodes):
             t_maxes[i],
             number_episodes[i],
         )
-        rewards.append(accuracy["Average_reward"][(number_episodes[i] // 1000)])
+        rewards.append(accuracy["Average_reward"][(number_episodes[i] // 100)-2])
         steps.append(
-            accuracy["Average_steps_per_episode"][(number_episodes[i] // 1000)]
+            accuracy["Average_steps_per_episode"][(number_episodes[i] // 100)-2]
         )
-        if accuracy["Average_reward"][(number_episodes[i] // 1000)] > max_reward:
-            max_reward = accuracy["Average_reward"][(number_episodes[i] // 1000)]
+        accuracies.append(accuracy)
+        if accuracy["Average_reward"][(number_episodes[i] // 100)-2] > max_reward:
+            max_reward = accuracy["Average_reward"][(number_episodes[i] // 100)-2]
             best_model_dict = accuracy
             best_q_table = qmodel.get_params()["Q_table"]
     results["Final reward"] = rewards
     results["Final steps number"] = steps
-    return results, best_model_dict, best_q_table
+    return results, best_model_dict, best_q_table, accuracies
 
 
 def visualize(env, q_table, episodes):
@@ -83,15 +84,16 @@ def visualize(env, q_table, episodes):
     env.close()
 
 
-def plot_results(accuracy_dict, number):
-    plt.plot(
-        accuracy_dict["Episode_number"],
-        accuracy_dict["Average_reward"],
-        marker="o",
-        linestyle="-",
-    )
-    plt.title(f"Average Reward over Episodes in model {number}")
+def plot_results(accuracies):
+    for i in range(len(accuracies)):
+        plt.plot(
+            accuracies[i]["Episode_number"],
+            accuracies[i]["Average_reward"],
+            label=f"Model: {i}"
+        )
+    plt.title(f"Average Reward over Episodes in models")
     plt.xlabel("Episode Number")
     plt.ylabel("Average Reward")
+    plt.legend()
     plt.grid(True)
     plt.show()

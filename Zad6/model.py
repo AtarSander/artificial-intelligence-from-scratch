@@ -51,11 +51,12 @@ class Qmodel:
                 self.q_table[current_state, action] += beta * delta
                 t += 1
                 current_state = next_state
-            if i % 1000 == 0:
-                total_rewards, total_steps = self.evaluate(100)
+            if i % 100 == 0 and i >100:
+                total_rewards, total_steps = self.evaluate(40)
                 numbers.append(i)
                 rewards.append(total_rewards)
                 steps.append(total_steps)
+            if i % 500 == 0:
                 epsilon = epsilon * 0.8
 
         accuracy["Episode_number"] = numbers
