@@ -30,10 +30,7 @@ class Qmodel:
         self.t_max = t_max
         self.q_table = np.zeros([self.env.observation_space.n, self.env.action_space.n])
         accuracy = {}
-        numbers = []
-        rewards = []
-        steps = []
-        penalties = []
+        numbers, steps, rewards = [], [], []
         for i in range(num_episodes):
             current_state, _ = self.env.reset()
             end = False
@@ -55,38 +52,29 @@ class Qmodel:
                 t += 1
                 current_state = next_state
             if i % 1000 == 0:
-                total_rewards, total_steps, total_penalties = self.evaluate(100)
+                total_rewards, total_steps = self.evaluate(100)
                 numbers.append(i)
                 rewards.append(total_rewards)
                 steps.append(total_steps)
-                penalties.append(total_penalties)
+                epsilon = epsilon * 0.8
 
         accuracy["Episode_number"] = numbers
         accuracy["Average_reward"] = rewards
         accuracy["Average_steps_per_episode"] = steps
-        accuracy["Penalties"] = penalties
         return accuracy
 
     def evaluate(self, eval_episodes_num):
-        total_reward = 0
-        total_steps = 0
-        total_penalties = 0
+        total_reward, total_steps = 0, 0
         for _ in range(eval_episodes_num):
             current_state, _ = self.env.reset()
             end = False
             t = 0
-            penalties = 0
             while not end and t < self.t_max:
                 action = np.argmax(self.q_table[current_state, :])
                 current_state, reward, end, _, _ = self.env.step(action)
                 total_reward += reward
                 t += 1
-                if reward == -10:
-                    penalties += 1
             total_steps += t
-            total_reward /= t
-            total_penalties += penalties
         total_reward /= eval_episodes_num
         total_steps /= eval_episodes_num
-        total_penalties /= eval_episodes_num
-        return total_reward, total_steps, total_penalties
+        return total_reward, total_steps
