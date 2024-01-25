@@ -25,6 +25,15 @@ class NaiveBayesian(Solver):
         self.categorical_probs = {}
         self.threshold = threshold
 
+    def get_parameters(self):
+        return self.categorical_probs, self.continuous_stats, self.priori, self.classes
+
+    def set_parameters(self, cat_probs, cont_stats, priori, classes):
+        self.continuous_stats = cont_stats
+        self.categorical_probs = cat_probs
+        self.priori = priori
+        self.classes = classes
+
     def normal_distribution(self, X, mean, std):
         exponent = np.exp(-((X - mean) ** 2 / (2 * std**2)))
 
@@ -49,14 +58,16 @@ class NaiveBayesian(Solver):
         self.calculate_priori(X, y)
         categorical_features, continuous_features = self.select_categorical_continous(X)
         self.classes = np.unique(y)
+
         for feature in categorical_features:
             self.categorical_probs[feature] = {}
-            for value in X[feature]:
+            for value in X[feature].unique():
                 self.categorical_probs[feature][value] = {}
                 for label in np.unique(y):
                     subset = X[y == label]
                     feature_prob = len(subset[subset[feature] == value]) / len(subset)
                     self.categorical_probs[feature][value][label] = feature_prob
+
         for feature in continuous_features:
             self.continuous_stats[feature] = {}
             for label in np.unique(y):
