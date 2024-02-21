@@ -29,11 +29,13 @@ class GradientDescent(Solver):
     :param iterations: how many times to iterate
     :type: int
     """
-    def __init__(self, step_size, iterations):
+
+    def __init__(self, step_size, iterations, epsilon=0.0000001):
         self.step_size = step_size
         self.iterations = iterations
         self.x_values = []
         self.y_values = []
+        self.epsilon = epsilon
 
     def get_parameters(self):
         """Returns a dictionary of hyperparameters"""
@@ -75,5 +77,7 @@ class GradientDescent(Solver):
             self.y_values.append(funct(x0))
             n_iter -= 1
             d = problem(x0)
+            if d.any() < self.epsilon:
+                break
             x0 = np.subtract(x0, d * self.step_size)
         return x0, funct(x0)
