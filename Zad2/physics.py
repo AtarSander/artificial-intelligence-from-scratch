@@ -8,7 +8,7 @@ def target_function(x, p=200, v=0, m=200, g=-0.09):
     for i in range(200):
         if x[i]:
             m -= 1
-            a = a + 40/m + g
+            a = 40 / m + g
         else:
             a = a + g
         v += a
