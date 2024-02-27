@@ -6,4 +6,25 @@ This repository contains from-scratch implementations of seven algorithms from v
 - Machine learning, classification - ID3 tree
 - Deep learning - feedforward neural net
 - Reinforcment learning - Q-learning
-- Probablistic classifier - naive bayesian classifier
+- Probablistic classifier - naive bayes classifier
+# Tech stack
+### Core libraries:
+- Numpy
+- Matplotlib
+- Pandas
+### Auxiliary libraries:
+| Algorithm | Libraries |
+| --------- | --------- |
+| Gradient descent | mpl_toolkits |
+| ID3 classifier | sklearn, seaborn |
+| Neural network | keras.datasets, PIL |
+| Q-learning | IPython, gymnasium |
+| Naive bayes | sklearn, seaborn |
+# Data
+In order to test and evaluate accuracy of certain algorithms it was necessary to use external datasets.
+| Algorithm | Dataset |
+| --------- | --------- |
+| ID3 classifier | https://www.kaggle.com/datasets/bhadaneeraj/cardio-vascular-disease-detection |
+| Neural network | http://yann.lecun.com/exdb/mnist/ |
+| Q-learning | https://gymnasium.farama.org/environments/toy_text/taxi/ |
+| Naive bayes | https://www.kaggle.com/datasets/bhadaneeraj/cardio-vascular-disease-detection |
