@@ -3,11 +3,12 @@ import numpy as np
 
 class Layer:
     def __init__(self, layer_dims, activation):
-        self.weights, self.bias = self.initialize_parameters()
+        self.weights, self.bias = self.initialize_parameters(layer_dims)
         self.activation = activation.lower()
 
-    def initialize_parameters(self):
-        pass
+    def initialize_parameters(self, dimensions):
+        self.weights = np.random.normal(0, 2 / dimensions[1], dimensions)
+        self.bias = np.zeros((dimensions[1],1))
 
     def forward(self, X):
         Z = self.forward_linear(X)
@@ -26,10 +27,10 @@ class Layer:
             Z = self.SoftMax(Z)
         return Z
 
-    def backward(self, d_prev):
+    def backward(self, d_prev, A_prev):
         dZ = d_prev * self.cache["activation"]
-        dW = np.dot(dZ, np.transpose(self.weight))
-
+        dW = np.dot(dZ, np.transpose(A_prev))
+        db = np.sum(dZ, axis=1, keepdims=True)
 
     def ReLU(self, Z):
         self.cache["activation"] = np.ones(Z.shape)
