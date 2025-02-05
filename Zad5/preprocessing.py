@@ -1,42 +1,40 @@
 import numpy as np
-from PIL import Image
-from keras.datasets import mnist
+import struct
+from array import array
+from os.path  import join
 
+class MnistDataloader(object):
+    def __init__(self, training_images_filepath,training_labels_filepath,
+                 test_images_filepath, test_labels_filepath):
+        self.training_images_filepath = training_images_filepath
+        self.training_labels_filepath = training_labels_filepath
+        self.test_images_filepath = test_images_filepath
+        self.test_labels_filepath = test_labels_filepath
 
-def load_dataset():
-    (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
-    X_train = np.array(
-        [np.array(Image.fromarray(img).resize((14, 14))) for img in X_train]
-    )
-    X_test = np.array(
-        [np.array(Image.fromarray(img).resize((14, 14))) for img in X_test]
-    )
+    def read_images_labels(self, images_filepath, labels_filepath):
+        labels = []
+        with open(labels_filepath, 'rb') as file:
+            magic, size = struct.unpack(">II", file.read(8))
+            if magic != 2049:
+                raise ValueError('Magic number mismatch, expected 2049, got {}'.format(magic))
+            labels = array("B", file.read())
 
-    X_train = X_train.reshape((-1, 14 * 14)) / 255.0 * 0.99 + 0.01
-    X_test = X_test.reshape((-1, 14 * 14)) / 255.0 * 0.99 + 0.01
+        with open(images_filepath, 'rb') as file:
+            magic, size, rows, cols = struct.unpack(">IIII", file.read(16))
+            if magic != 2051:
+                raise ValueError('Magic number mismatch, expected 2051, got {}'.format(magic))
+            image_data = array("B", file.read())
+        images = []
+        for i in range(size):
+            images.append([0] * rows * cols)
+        for i in range(size):
+            img = np.array(image_data[i * rows * cols:(i + 1) * rows * cols])
+            img = img.reshape(28, 28)
+            images[i][:] = img
 
-    rand = np.arange(60000)
-    np.random.shuffle(rand)
-    train_no = rand[:50000]
-    val_no = np.setdiff1d(rand, train_no)
+        return images, labels
 
-    X_train, X_dev = X_train[train_no, :], X_train[val_no, :]
-    Y_train, Y_dev = Y_train[train_no], Y_train[val_no]
-
-    Y_train_onehot = np.zeros((Y_train.size, Y_train.max() + 1))
-    Y_train_onehot[np.arange(Y_train.size), Y_train] = 1
-
-    Y_dev_onehot = np.zeros((Y_dev.size, Y_dev.max() + 1))
-    Y_dev_onehot[np.arange(Y_dev.size), Y_dev] = 1
-
-    Y_test_onehot = np.zeros((Y_test.size, Y_test.max() + 1))
-    Y_test_onehot[np.arange(Y_test.size), Y_test] = 1
-
-    return (
-        X_train.T[:10000, :],
-        Y_train_onehot.T[:10000, :],
-        X_dev.T[:1000, :],
-        Y_dev_onehot.T[:1000, :],
-        X_test.T[:2000, :],
-        Y_test_onehot.T[:2000, :],
-    )
+    def load_data(self):
+        x_train, y_train = self.read_images_labels(self.training_images_filepath, self.training_labels_filepath)
+        x_test, y_test = self.read_images_labels(self.test_images_filepath, self.test_labels_filepath)
+        return (x_train, y_train),(x_test, y_test)
