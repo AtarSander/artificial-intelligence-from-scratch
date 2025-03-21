@@ -8,28 +8,30 @@ class Layer:
         self.cache = {}
 
     def initialize_parameters(self, dimensions: tuple[int, int]) -> None:
-        self.weights = np.random.randn(dimensions[1], dimensions[0]) * np.sqrt(2 / dimensions[0])
+        self.weights = np.random.randn(dimensions[1], dimensions[0]) * np.sqrt(
+            2 / dimensions[0]
+        )
         self.bias = np.zeros((dimensions[1],))
 
-    def forward(self, X: np.array) -> np.array:
+    def forward(self, X: np.ndarray) -> np.ndarray:
         self.cache["input"] = X
         Z = self.forward_linear(X)
         Z = self.activation(Z)
         return Z
 
-    def forward_linear(self, X: np.array) -> np.array:
+    def forward_linear(self, X: np.ndarray) -> np.ndarray:
         w, b = self.weights, self.bias
         Z = np.dot(X, np.transpose(w)) + b
         return Z
 
-    def activation(self, Z: np.array) -> np.array:
+    def activation(self, Z: np.ndarray) -> np.ndarray:
         if self.activation_type == "relu":
             Z = self.relu(Z)
         elif self.activation_type == "softmax":
             Z = self.softmax(Z)
         return Z
 
-    def backward(self, d_prev: np.array) -> tuple[np.array, np.array, np.array]:
+    def backward(self, d_prev: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         if self.activation_type == "relu":
             dZ = d_prev * self.cache["activation"]
         else:
@@ -40,22 +42,19 @@ class Layer:
         dA_prev = np.dot(dZ, self.weights)
         return dW, db, dA_prev
 
-    def relu(self, Z: np.array) -> np.array:
+    def relu(self, Z: np.ndarray) -> np.ndarray:
         self.cache["activation"] = (Z > 0).astype(float)
         return np.maximum(Z, 0)
 
-    def softmax(self, x: np.array) -> np.array:
-        shift_x = x-np.max(x, axis=-1, keepdims=True)
+    def softmax(self, x: np.ndarray) -> np.ndarray:
+        shift_x = x - np.max(x, axis=-1, keepdims=True)
         e_x = np.exp(shift_x)
         softmax = e_x / np.sum(e_x, axis=-1, keepdims=True)
-        self.cache["activation"] = softmax * (1-softmax)
+        self.cache["activation"] = softmax * (1 - softmax)
         return softmax
 
-    def update_parameters(self, grads_w: np.array, grads_b: np.array, learning_rate: float) -> None:
+    def update_parameters(
+        self, grads_w: np.ndarray, grads_b: np.ndarray, learning_rate: float
+    ) -> None:
         self.weights = self.weights - learning_rate * np.transpose(grads_w)
         self.bias = self.bias - learning_rate * grads_b
-
-
-
-
-
