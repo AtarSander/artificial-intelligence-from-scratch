@@ -2,53 +2,57 @@ import numpy as np
 
 
 class Layer:
-    def __init__(self, layer_dims, activation):
+    def __init__(self, layer_dims: tuple[int, int], activation: str) -> None:
         self.initialize_parameters(layer_dims)
         self.activation_type = activation.lower()
         self.cache = {}
 
-    def initialize_parameters(self, dimensions):
-        self.weights = np.array(np.random.normal(0, 2 / dimensions[1], list(dimensions)[::-1]))
-        self.bias = np.zeros((dimensions[1],1))
+    def initialize_parameters(self, dimensions: tuple[int, int]) -> None:
+        self.weights = np.random.randn(dimensions[1], dimensions[0]) * np.sqrt(2 / dimensions[0])
+        self.bias = np.zeros((dimensions[1],))
 
-    def forward(self, X):
+    def forward(self, X: np.array) -> np.array:
         self.cache["input"] = X
         Z = self.forward_linear(X)
         Z = self.activation(Z)
         return Z
 
-    def forward_linear(self, X):
+    def forward_linear(self, X: np.array) -> np.array:
         w, b = self.weights, self.bias
-        Z = np.dot(w, X) + b
+        Z = np.dot(X, np.transpose(w)) + b
         return Z
 
-    def activation(self, Z):
+    def activation(self, Z: np.array) -> np.array:
         if self.activation_type == "relu":
             Z = self.relu(Z)
         elif self.activation_type == "softmax":
             Z = self.softmax(Z)
         return Z
 
-    def backward(self, d_prev):
-        dZ = d_prev * self.cache["activation"]
-        dW = np.dot(dZ, np.transpose(self.cache["input"]))
-        db = np.sum(dZ, axis=1, keepdims=True)
-        dA_prev = np.dot(np.transpose(self.weights), dZ)
+    def backward(self, d_prev: np.array) -> tuple[np.array, np.array, np.array]:
+        if self.activation_type == "relu":
+            dZ = d_prev * self.cache["activation"]
+        else:
+            dZ = d_prev
+
+        dW = np.dot(np.transpose(self.cache["input"]), dZ)
+        db = np.sum(np.transpose(dZ), axis=1, keepdims=False)
+        dA_prev = np.dot(dZ, self.weights)
         return dW, db, dA_prev
 
-    def relu(self, Z):
-        self.cache["activation"] = np.ones(Z.shape)
+    def relu(self, Z: np.array) -> np.array:
+        self.cache["activation"] = (Z > 0).astype(float)
         return np.maximum(Z, 0)
 
-    def softmax(self, x):
-        shift_x = x-np.max(x)
+    def softmax(self, x: np.array) -> np.array:
+        shift_x = x-np.max(x, axis=-1, keepdims=True)
         e_x = np.exp(shift_x)
-        softmax = e_x / np.sum(e_x)
+        softmax = e_x / np.sum(e_x, axis=-1, keepdims=True)
         self.cache["activation"] = softmax * (1-softmax)
         return softmax
 
-    def update_parameters(self, grads_w, grads_b, learning_rate):
-        self.weights = self.weights - learning_rate * grads_w
+    def update_parameters(self, grads_w: np.array, grads_b: np.array, learning_rate: float) -> None:
+        self.weights = self.weights - learning_rate * np.transpose(grads_w)
         self.bias = self.bias - learning_rate * grads_b
 
 
