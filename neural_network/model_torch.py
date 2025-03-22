@@ -1,3 +1,4 @@
+from utils import timer
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
@@ -5,22 +6,34 @@ import numpy as np
 
 
 class TorchModel(nn.Module):
-    def __init__(self, device: torch.device) -> None:
+    def __init__(self, layers: list[tuple[tuple[int, int], str]]) -> None:
         super().__init__()
-        self.linear1 = nn.Linear(in_features=784, out_features=256)
-        self.linear2 = nn.Linear(in_features=256, out_features=128)
-        self.linear3 = nn.Linear(in_features=128, out_features=64)
-        self.linear4 = nn.Linear(in_features=64, out_features=32)
+        self.layers = nn.ModuleList()
+        for layer in layers:
+            self.layers.append(nn.Linear(layer[0][0], layer[0][1]))
+        self.init_weights()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if device.type == "cuda":
             self.cuda()
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         x = torch.flatten(x, start_dim=1)
-        x = F.relu(self.linear1(x))
-        x = F.relu(self.linear2(x))
-        x = F.relu(self.linear3(x))
-        x = self.linear4(x)
+        for i, layer in enumerate(self.layers):
+            if i == len(self.layers) - 1:
+                x = layer(x)
+            else:
+                x = F.relu(layer(x))
         return x
+
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        x = torch.from_numpy(x).float()
+        return self(x).cpu().detach().numpy()
+
+    def init_weights(self) -> None:
+        for layer in self.layers:
+            if isinstance(layer, nn.Linear):
+                nn.init.kaiming_normal_(layer.weight, nonlinearity="relu")
+                nn.init.zeros_(layer.bias)
 
 
 class MnistDataset(torch.utils.data.Dataset):
@@ -39,8 +52,8 @@ class MnistDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.img_labels)
 
-    def __getitem__(self, idx):
-        image = torch.tensor(self.images[idx], dtype=torch.float32)
+    def __getitem__(self, idx: int):
+        image = torch.from_numpy(self.images[idx]).float()
         label = self.img_labels[idx]
         if self.transform:
             image = self.transform(image)
@@ -49,6 +62,7 @@ class MnistDataset(torch.utils.data.Dataset):
         return image, label
 
 
+@timer
 def torch_train(
     dataset: MnistDataset,
     model: TorchModel,
@@ -69,10 +83,10 @@ def torch_train(
             optimizer.zero_grad()
             y_pred = model((image / 255.0).to(device))
             loss = criterion(y_pred, label.to(device))
-            print(f"Loss:{loss}")
             loss.backward()
             optimizer.step()
-            loss_sum += loss
+            with torch.no_grad():
+                loss_sum += loss.item()
         losses.append(loss_sum / len(dataloader))
         if epoch % 10 == 0:
             print(f"Epoch:{epoch}, Loss: {loss_sum / len(dataloader)}")
