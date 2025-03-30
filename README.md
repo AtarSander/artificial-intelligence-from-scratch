@@ -7,7 +7,7 @@ This repository contains from-scratch implementations of seven algorithms from v
 | Two-player zero-sum games | alpha beta pruning |
 | Machine learning, classification | ID3 tree |
 | Deep learning | feedforward neural net |
-| Reinforcment learning | Q-learning |
+| Reinforcement learning | Q-learning |
 | Probablistic classifier | naive bayes classifier |
 # Tech stack
 In order to understand and evaluate the inner workings of the algorithms, all of them are implemented almost exclusively with numpy. Additional libraries are used for data preprocessing, setting up testing environment and/or results visualization.
